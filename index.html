@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Speed - Le Jeu</title>
-    <!-- Importation d'une police futuriste depuis Google Fonts -->
+    <title>Neon Drift - Open World</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
     
     <style>
-        /* Styles Généraux */
         * {
             margin: 0;
             padding: 0;
@@ -26,11 +24,10 @@
             color: #fff;
         }
 
-        /* Conteneur principal */
         #game-container {
             position: relative;
-            width: 800px;
-            height: 600px;
+            width: 900px;
+            height: 650px;
             background-color: #0c0c14;
             border: 4px solid #00f2fe;
             border-radius: 12px;
@@ -38,7 +35,6 @@
             overflow: hidden;
         }
 
-        /* Écrans (Menu, Jeu, etc.) */
         .screen {
             position: absolute;
             width: 100%;
@@ -47,41 +43,33 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: all 0.5s ease-in-out;
+            transition: all 0.3s ease-in-out;
         }
 
         .hidden {
             opacity: 0;
             pointer-events: none;
-            transform: scale(0.9);
+            transform: scale(0.95);
         }
 
-        /* Style du Titre */
         .game-title {
             font-size: 4rem;
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 4px;
             color: #fff;
-            text-shadow: 0 0 10px #ff007f, 0 0 20px #ff007f, 0 0 40px #ff007f;
+            text-shadow: 0 0 10px #ff007f, 0 0 20px #ff007f;
             margin-bottom: 50px;
-            animation: pulse 2s infinite alternate;
         }
 
-        @keyframes pulse {
-            from { transform: scale(1); text-shadow: 0 0 10px #ff007f, 0 0 20px #ff007f; }
-            to { transform: scale(1.03); text-shadow: 0 0 15px #ff007f, 0 0 30px #ff007f, 0 0 50px #ff007f; }
-        }
-
-        /* Groupe de Boutons */
         .menu-buttons {
             display: flex;
             flex-direction: column;
             gap: 20px;
             width: 300px;
+            zIndex: 10;
         }
 
-        /* Style des Boutons */
         .btn {
             font-family: 'Orbitron', sans-serif;
             font-size: 1.2rem;
@@ -95,17 +83,15 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             transition: all 0.3s ease;
-            box-shadow: inset 0 0 0 rgba(0, 242, 254, 0);
         }
 
         .btn:hover {
             color: #fff;
             background-color: #00f2fe;
-            box-shadow: 0 0 15px #00f2fe, inset 0 0 10px rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 15px #00f2fe;
             transform: translateY(-3px);
         }
 
-        /* Bouton Quitter/Retour différent */
         .btn-secondary {
             border-color: #ff007f;
             color: #ff007f;
@@ -116,14 +102,36 @@
             box-shadow: 0 0 15px #ff007f;
         }
 
-        /* Fenêtre de texte pour les sections */
-        .panel-text {
-            font-size: 1rem;
-            color: #a0a0ca;
-            margin-bottom: 40px;
-            text-align: center;
-            max-width: 80%;
-            line-height: 1.6;
+        /* Interface du jeu */
+        #canvas-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        canvas {
+            display: block;
+            background: #05050a;
+        }
+
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 1.2rem;
+            color: #00f2fe;
+            text-shadow: 0 0 5px #00f2fe;
+            pointer-events: none;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #00f2fe;
+        }
+
+        .back-hud {
+            position: absolute;
+            top: 20px;
+            right: 20px;
         }
     </style>
 </head>
@@ -131,41 +139,42 @@
 
     <div id="game-container">
 
-        <!-- ÉCRAN: MENU PRINCIPAL -->
+        <!-- MENU PRINCIPAL -->
         <div id="main-menu" class="screen">
-            <h1 class="game-title">Neon Speed</h1>
+            <h1 class="game-title">Neon Drift</h1>
             <div class="menu-buttons">
-                <button class="btn" onclick="switchScreen('game-screen')">Jouer</button>
+                <button class="btn" onclick="switchScreen('game-screen')">Piloter</button>
                 <button class="btn" onclick="switchScreen('settings-screen')">Paramètres</button>
                 <button class="btn" onclick="switchScreen('controls-screen')">Commandes</button>
             </div>
         </div>
 
-        <!-- ÉCRAN: JEU (Zone temporaire) -->
+        <!-- ZONE DE JEU (OPEN WORLD) -->
         <div id="game-screen" class="screen hidden">
-            <h1 class="game-title" style="text-shadow: 0 0 10px #00f2fe;">En Course...</h1>
-            <p class="panel-text">Ici, nous allons bientôt coder la route et la voiture !</p>
-            <div class="menu-buttons">
-                <button class="btn btn-secondary" onclick="switchScreen('main-menu')">Retour au menu</button>
+            <div id="canvas-container">
+                <div class="hud">Vitesse: <span id="speed-display">0</span> km/h</div>
+                <div class="back-hud">
+                    <button class="btn btn-secondary" style="padding: 8px 15px; font-size: 0.9rem;" onclick="stopGame()">Menu</button>
+                </div>
+                <canvas id="gameCanvas" width="900" height="650"></canvas>
             </div>
         </div>
 
-        <!-- ÉCRAN: PARAMÈTRES -->
+        <!-- PARAMÈTRES -->
         <div id="settings-screen" class="screen hidden">
             <h1 class="game-title">Paramètres</h1>
-            <p class="panel-text">Options audio, choix de la musique et graphismes à venir.</p>
             <div class="menu-buttons">
                 <button class="btn btn-secondary" onclick="switchScreen('main-menu')">Retour</button>
             </div>
         </div>
 
-        <!-- ÉCRAN: COMMANDES -->
+        <!-- COMMANDES -->
         <div id="controls-screen" class="screen hidden">
             <h1 class="game-title">Commandes</h1>
-            <p class="panel-text">
-                Utilise les flèches directionnelles <br> 
-                <strong>Gauche (◀)</strong> et <strong>Droite (▶)</strong> <br> 
-                pour diriger ton véhicule et esquiver les obstacles.
+            <p style="text-align: center; line-height: 2; color: #a0a0ca; margin-bottom: 30px;">
+                Fais un clic sur l'écran de jeu pour l'activer.<br>
+                ▲ accélérer | ▼ reculer / freiner<br>
+                ◀ tourner à gauche | ▶ tourner à droite
             </p>
             <div class="menu-buttons">
                 <button class="btn btn-secondary" onclick="switchScreen('main-menu')">Retour</button>
@@ -174,19 +183,183 @@
 
     </div>
 
-    <!-- Logique JavaScript pour naviguer entre les écrans -->
     <script>
+        // --- SYSTÈME DE NAVIGATION ---
+        let gameLoopId = null;
+
         function switchScreen(screenId) {
-            // On cache d'abord tous les écrans
-            const screens = document.querySelectorAll('.screen');
-            screens.forEach(screen => {
-                screen.classList.add('hidden');
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+            
+            if (screenId === 'game-screen') {
+                initGame();
+            }
+        }
+
+        function stopGame() {
+            if (gameLoopId) {
+                cancelAnimationFrame(gameLoopId);
+                gameLoopId = null;
+            }
+            switchScreen('main-menu');
+        }
+
+        // --- MOTEUR DE JEU & PHYSIQUE ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const speedDisplay = document.getElementById('speed-display');
+
+        // Dimensions du monde
+        const WORLD_SIZE = 4000;
+
+        // Configuration de la voiture
+        let car = {
+            x: WORLD_SIZE / 2,
+            y: WORLD_SIZE / 2,
+            angle: 0,
+            speed: 0,
+            maxSpeed: 12,
+            backSpeed: -4,
+            accel: 0.15,
+            decel: 0.05,
+            friction: 0.03,
+            turnSpeed: 0.04,
+            width: 40,
+            height: 20
+        };
+
+        // Entrées clavier
+        let keys = {};
+        window.addEventListener('keydown', (e) => keys[e.key] = true);
+        window.addEventListener('keyup', (e) => keys[e.key] = false);
+
+        // Génération d'obstacles (immeubles néon dans le monde)
+        let obstacles = [];
+        function generateWorld() {
+            obstacles = [];
+            // On génère 150 blocs lumineux aléatoires dans la map
+            for(let i=0; i<150; i++) {
+                obstacles.push({
+                    x: Math.random() * (WORLD_SIZE - 200) + 100,
+                    y: Math.random() * (WORLD_SIZE - 200) + 100,
+                    w: Math.random() * 100 + 50,
+                    h: Math.random() * 100 + 50,
+                    color: Math.random() > 0.5 ? '#ff007f' : '#00f2fe'
+                });
+            }
+        }
+
+        function initGame() {
+            generateWorld();
+            car.x = WORLD_SIZE / 2;
+            car.y = WORLD_SIZE / 2;
+            car.speed = 0;
+            car.angle = 0;
+            canvas.focus();
+            gameLoop();
+        }
+
+        function updatePhysics() {
+            // Avancer / Reculer
+            if (keys['ArrowUp']) {
+                if (car.speed < car.maxSpeed) car.speed += car.accel;
+            } else if (keys['ArrowDown']) {
+                if (car.speed > car.backSpeed) car.speed -= car.accel;
+            } else {
+                // Freinage naturel (friction du sol)
+                if (car.speed > 0) car.speed -= car.friction;
+                if (car.speed < 0) car.speed += car.friction;
+                if (Math.abs(car.speed) < 0.05) car.speed = 0;
+            }
+
+            // Direction (La voiture tourne uniquement si elle roule, comme en vrai)
+            if (Math.abs(car.speed) > 0.5) {
+                // Inverser la direction si on recule
+                const currentTurnSpeed = car.speed > 0 ? car.turnSpeed : -car.turnSpeed;
+                if (keys['ArrowLeft']) car.angle -= currentTurnSpeed * (Math.abs(car.speed) / car.maxSpeed + 0.5);
+                if (keys['ArrowRight']) car.angle += currentTurnSpeed * (Math.abs(car.speed) / car.maxSpeed + 0.5);
+            }
+
+            // Calcul du déplacement vectoriel
+            car.x += Math.cos(car.angle) * car.speed;
+            car.y += Math.sin(car.angle) * car.speed;
+
+            // Limites du monde (Open World)
+            if (car.x < 0) car.x = 0;
+            if (car.x > WORLD_SIZE) car.x = WORLD_SIZE;
+            if (car.y < 0) car.y = 0;
+            if (car.y > WORLD_SIZE) car.y = WORLD_SIZE;
+
+            // Mise à jour du compteur de vitesse (arrondi)
+            speedDisplay.innerText = Math.round(Math.abs(car.speed) * 20);
+        }
+
+        function drawGame() {
+            // Effacer l'écran
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Définir la caméra centrée sur la voiture
+            let camX = car.x - canvas.width / 2;
+            let camY = car.y - canvas.height / 2;
+
+            ctx.save();
+            // Décaler tout le dessin selon la position de la caméra
+            ctx.translate(-camX, -camY);
+
+            // 1. Dessiner le sol quadrillé (effet néon)
+            ctx.strokeStyle = '#151525';
+            ctx.lineWidth = 1;
+            const gridSize = 100;
+            for (let x = 0; x < WORLD_SIZE; x += gridSize) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, WORLD_SIZE); ctx.stroke();
+            }
+            for (let y = 0; y < WORLD_SIZE; y += gridSize) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(WORLD_SIZE, y); ctx.stroke();
+            }
+
+            // 2. Dessiner les obstacles (immeubles)
+            obstacles.forEach(obs => {
+                ctx.fillStyle = '#090910';
+                ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                ctx.strokeStyle = obs.color;
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = obs.color;
+                ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
+                ctx.shadowBlur = 0; // reset
             });
 
-            // On affiche uniquement l'écran demandé
-            document.getElementById(screenId).classList.remove('hidden');
+            // 3. Dessiner la voiture
+            ctx.save();
+            ctx.translate(car.x, car.y);
+            ctx.rotate(car.angle);
+
+            // Ombre / Lueur sous la voiture
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#00f2fe';
+
+            // Corps de la voiture
+            ctx.fillStyle = '#00f2fe';
+            ctx.fillRect(-car.width/2, -car.height/2, car.width, car.height);
+
+            // Phares (petites lignes jaunes à l'avant)
+            ctx.fillStyle = '#ffff00';
+            ctx.fillRect(car.width/2 - 4, -car.height/2 + 2, 4, 3);
+            ctx.fillRect(car.width/2 - 4, car.height/2 - 5, 4, 3);
+
+            // Pare-brise sombre
+            ctx.fillStyle = '#0c0c14';
+            ctx.fillRect(-2, -car.height/2 + 3, 8, car.height - 6);
+
+            ctx.restore();
+            ctx.restore();
+        }
+
+        function gameLoop() {
+            updatePhysics();
+            drawGame();
+            gameLoopId = requestAnimationFrame(gameLoop);
         }
     </script>
-
 </body>
 </html>
