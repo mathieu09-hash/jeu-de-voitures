@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Drift - Open World</title>
+    <title>Neon Horizon 3D</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
     
+    <!-- On importe la bibliothèque 3D Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
     <style>
         * {
             margin: 0;
@@ -15,7 +18,7 @@
 
         body {
             font-family: 'Orbitron', sans-serif;
-            background: radial-gradient(circle, #1a1a2e 0%, #0f0f1a 100%);
+            background: #0a0a12;
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -26,8 +29,8 @@
 
         #game-container {
             position: relative;
-            width: 900px;
-            height: 650px;
+            width: 1000px;
+            height: 700px;
             background-color: #0c0c14;
             border: 4px solid #00f2fe;
             border-radius: 12px;
@@ -44,6 +47,7 @@
             justify-content: center;
             align-items: center;
             transition: all 0.3s ease-in-out;
+            z-index: 2;
         }
 
         .hidden {
@@ -67,7 +71,6 @@
             flex-direction: column;
             gap: 20px;
             width: 300px;
-            zIndex: 10;
         }
 
         .btn {
@@ -102,36 +105,39 @@
             box-shadow: 0 0 15px #ff007f;
         }
 
-        /* Interface du jeu */
-        #canvas-container {
-            position: relative;
+        /* Interface du jeu 3D */
+        #game-screen {
+            position: absolute;
             width: 100%;
             height: 100%;
         }
 
-        canvas {
+        #canvas3d {
+            width: 100%;
+            height: 100%;
             display: block;
-            background: #05050a;
         }
 
         .hud {
             position: absolute;
             top: 20px;
             left: 20px;
-            font-size: 1.2rem;
+            font-size: 1.5rem;
             color: #00f2fe;
             text-shadow: 0 0 5px #00f2fe;
             pointer-events: none;
-            background: rgba(0,0,0,0.5);
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #00f2fe;
+            background: rgba(12, 12, 20, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #00f2fe;
+            z-index: 3;
         }
 
         .back-hud {
             position: absolute;
             top: 20px;
             right: 20px;
+            z-index: 3;
         }
     </style>
 </head>
@@ -141,40 +147,29 @@
 
         <!-- MENU PRINCIPAL -->
         <div id="main-menu" class="screen">
-            <h1 class="game-title">Neon Drift</h1>
+            <h1 class="game-title">Neon Horizon</h1>
             <div class="menu-buttons">
-                <button class="btn" onclick="switchScreen('game-screen')">Piloter</button>
-                <button class="btn" onclick="switchScreen('settings-screen')">Paramètres</button>
+                <button class="btn" onclick="switchScreen('game-screen')">Piloter (3D)</button>
                 <button class="btn" onclick="switchScreen('controls-screen')">Commandes</button>
             </div>
         </div>
 
-        <!-- ZONE DE JEU (OPEN WORLD) -->
+        <!-- ZONE DE JEU 3D -->
         <div id="game-screen" class="screen hidden">
-            <div id="canvas-container">
-                <div class="hud">Vitesse: <span id="speed-display">0</span> km/h</div>
-                <div class="back-hud">
-                    <button class="btn btn-secondary" style="padding: 8px 15px; font-size: 0.9rem;" onclick="stopGame()">Menu</button>
-                </div>
-                <canvas id="gameCanvas" width="900" height="650"></canvas>
+            <div class="hud">Vitesse: <span id="speed-display">0</span> km/h</div>
+            <div class="back-hud">
+                <button class="btn btn-secondary" style="padding: 8px 15px; font-size: 0.9rem;" onclick="stopGame()">Menu</button>
             </div>
-        </div>
-
-        <!-- PARAMÈTRES -->
-        <div id="settings-screen" class="screen hidden">
-            <h1 class="game-title">Paramètres</h1>
-            <div class="menu-buttons">
-                <button class="btn btn-secondary" onclick="switchScreen('main-menu')">Retour</button>
-            </div>
+            <!-- C'est ici que Three.js va injecter le monde en 3D -->
+            <div id="canvas3d"></div>
         </div>
 
         <!-- COMMANDES -->
         <div id="controls-screen" class="screen hidden">
             <h1 class="game-title">Commandes</h1>
-            <p style="text-align: center; line-height: 2; color: #a0a0ca; margin-bottom: 30px;">
-                Fais un clic sur l'écran de jeu pour l'activer.<br>
-                ▲ accélérer | ▼ reculer / freiner<br>
-                ◀ tourner à gauche | ▶ tourner à droite
+            <p style="text-align: center; line-height: 2; color: #a0a0ca; margin-bottom: 30px; font-size: 1.1rem;">
+                ▲ Accélérer | ▼ Freiner / Reculer<br>
+                ◀ Tourner à Gauche | ▶ Tourner à Droite
             </p>
             <div class="menu-buttons">
                 <button class="btn btn-secondary" onclick="switchScreen('main-menu')">Retour</button>
@@ -184,181 +179,181 @@
     </div>
 
     <script>
-        // --- SYSTÈME DE NAVIGATION ---
-        let gameLoopId = null;
+        let scene, camera, renderer, gameLoopId;
+        let car, carBody;
+        let obstacles = [];
+        
+        // Physique de la voiture
+        let physics = {
+            speed: 0,
+            maxSpeed: 0.8,
+            backSpeed: -0.2,
+            accel: 0.01,
+            decel: 0.005,
+            friction: 0.003,
+            turnSpeed: 0.03,
+            angle: 0
+        };
+
+        let keys = {};
+        window.addEventListener('keydown', (e) => keys[e.key] = true);
+        window.addEventListener('keyup', (e) => keys[e.key] = false);
 
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
             document.getElementById(screenId).classList.remove('hidden');
             
             if (screenId === 'game-screen') {
-                initGame();
+                init3DGame();
             }
         }
 
-        function stopGame() {
-            if (gameLoopId) {
-                cancelAnimationFrame(gameLoopId);
-                gameLoopId = null;
-            }
-            switchScreen('main-menu');
-        }
+        function init3DGame() {
+            const container = document.getElementById('canvas3d');
+            container.innerHTML = ""; // On nettoie si besoin
 
-        // --- MOTEUR DE JEU & PHYSIQUE ---
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const speedDisplay = document.getElementById('speed-display');
+            // 1. CRÉATION DE LA SCÈNE ET DE LA CAMÉRA
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color('#05050a');
+            scene.fog = new THREE.FogExp2('#05050a', 0.015); // Effet de brume au loin
 
-        // Dimensions du monde
-        const WORLD_SIZE = 4000;
+            camera = new THREE.PerspectiveCamera(60, 1000 / 700, 0.1, 1000);
 
-        // Configuration de la voiture
-        let car = {
-            x: WORLD_SIZE / 2,
-            y: WORLD_SIZE / 2,
-            angle: 0,
-            speed: 0,
-            maxSpeed: 12,
-            backSpeed: -4,
-            accel: 0.15,
-            decel: 0.05,
-            friction: 0.03,
-            turnSpeed: 0.04,
-            width: 40,
-            height: 20
-        };
+            // 2. LE MOTEUR DE RENDU
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(1000, 700);
+            container.appendChild(renderer.domElement);
 
-        // Entrées clavier
-        let keys = {};
-        window.addEventListener('keydown', (e) => keys[e.key] = true);
-        window.addEventListener('keyup', (e) => keys[e.key] = false);
+            // 3. LES LUMIÈRES
+            const ambientLight = new THREE.AmbientLight('#ffffff', 0.4);
+            scene.add(ambientLight);
 
-        // Génération d'obstacles (immeubles néon dans le monde)
-        let obstacles = [];
-        function generateWorld() {
+            const dirLight = new THREE.DirectionalLight('#00f2fe', 0.8);
+            dirLight.position.set(10, 20, 10);
+            scene.add(dirLight);
+
+            // 4. LE DECOR : Un sol immense avec grille néon
+            const groundGeo = new THREE.PlaneGeometry(2000, 2000);
+            const groundMat = new THREE.MeshBasicMaterial({ color: #080812 });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2; // On le couche à plat
+            scene.add(ground);
+
+            const gridHelper = new THREE.GridHelper(2000, 100, '#00f2fe', '#151525');
+            gridHelper.position.y = 0.01;
+            scene.add(gridHelper);
+
+            // 5. LA VOITURE (Assemblage de blocs 3D)
+            car = new THREE.Group();
+            
+            // Châssis principal
+            const bodyGeo = new THREE.BoxGeometry(2, 0.6, 4);
+            const bodyMat = new THREE.MeshPhongMaterial({ color: '#00f2fe', emissive: '#004455' });
+            carBody = new THREE.Mesh(bodyGeo, bodyMat);
+            carBody.position.y = 0.4;
+            car.add(carBody);
+
+            // Habitacle (Cockpit)
+            const cabinGeo = new THREE.BoxGeometry(1.6, 0.5, 1.8);
+            const cabinMat = new THREE.MeshPhongMaterial({ color: '#0c0c14' });
+            const cabin = new THREE.Mesh(cabinGeo, cabinMat);
+            cabin.position.set(0, 0.8, -0.2);
+            car.add(cabin);
+
+            // Phares néons avant
+            const lightGeo = new THREE.BoxGeometry(0.3, 0.1, 0.1);
+            const lightMat = new THREE.MeshBasicMaterial({ color: '#ffff00' });
+            const leftLight = new THREE.Mesh(lightGeo, lightMat);
+            leftLight.position.set(-0.7, 0.4, 2);
+            const rightLight = leftLight.clone();
+            rightLight.position.x = 0.7;
+            car.add(leftLight, rightLight);
+
+            scene.add(car);
+            car.position.set(0, 0, 0);
+
+            // 6. LES CARTES / DÉCORS (Génération de buildings 3D autour)
             obstacles = [];
-            // On génère 150 blocs lumineux aléatoires dans la map
-            for(let i=0; i<150; i++) {
-                obstacles.push({
-                    x: Math.random() * (WORLD_SIZE - 200) + 100,
-                    y: Math.random() * (WORLD_SIZE - 200) + 100,
-                    w: Math.random() * 100 + 50,
-                    h: Math.random() * 100 + 50,
-                    color: Math.random() > 0.5 ? '#ff007f' : '#00f2fe'
+            for(let i=0; i<100; i++) {
+                const h = Math.random() * 30 + 10;
+                const w = Math.random() * 10 + 5;
+                const obsGeo = new THREE.BoxGeometry(w, h, w);
+                const obsMat = new THREE.MeshPhongMaterial({ 
+                    color: '#090910', 
+                    emissive: Math.random() > 0.5 ? '#ff007f' : '#00f2fe',
+                    wireframe: false
                 });
-            }
-        }
+                const building = new THREE.Mesh(obsGeo, obsMat);
+                
+                // Placement aléatoire sur la map (en évitant le centre de départ)
+                let rx = (Math.random() - 0.5) * 600;
+                let rz = (Math.random() - 0.5) * 600;
+                if (Math.abs(rx) < 20) rx += 40;
+                if (Math.abs(rz) < 20) rz += 40;
 
-        function initGame() {
-            generateWorld();
-            car.x = WORLD_SIZE / 2;
-            car.y = WORLD_SIZE / 2;
-            car.speed = 0;
-            car.angle = 0;
-            canvas.focus();
-            gameLoop();
+                building.position.set(rx, h/2, rz);
+                scene.add(building);
+            }
+
+            animate();
         }
 
         function updatePhysics() {
-            // Avancer / Reculer
+            // Accélération / Freinage
             if (keys['ArrowUp']) {
-                if (car.speed < car.maxSpeed) car.speed += car.accel;
+                if (physics.speed < physics.maxSpeed) physics.speed += physics.accel;
             } else if (keys['ArrowDown']) {
-                if (car.speed > car.backSpeed) car.speed -= car.accel;
+                if (physics.speed > physics.backSpeed) physics.speed -= physics.accel;
             } else {
-                // Freinage naturel (friction du sol)
-                if (car.speed > 0) car.speed -= car.friction;
-                if (car.speed < 0) car.speed += car.friction;
-                if (Math.abs(car.speed) < 0.05) car.speed = 0;
+                if (physics.speed > 0) physics.speed -= physics.friction;
+                if (physics.speed < 0) physics.speed += physics.friction;
+                if (Math.abs(physics.speed) < 0.005) physics.speed = 0;
             }
 
-            // Direction (La voiture tourne uniquement si elle roule, comme en vrai)
-            if (Math.abs(car.speed) > 0.5) {
-                // Inverser la direction si on recule
-                const currentTurnSpeed = car.speed > 0 ? car.turnSpeed : -car.turnSpeed;
-                if (keys['ArrowLeft']) car.angle -= currentTurnSpeed * (Math.abs(car.speed) / car.maxSpeed + 0.5);
-                if (keys['ArrowRight']) car.angle += currentTurnSpeed * (Math.abs(car.speed) / car.maxSpeed + 0.5);
+            // Direction (Braquage réaliste proportionnel à la vitesse)
+            if (Math.abs(physics.speed) > 0.02) {
+                const currentTurn = physics.speed > 0 ? physics.turnSpeed : -physics.turnSpeed;
+                if (keys['ArrowLeft']) physics.angle += currentTurn;
+                if (keys['ArrowRight']) physics.angle -= currentTurn;
             }
 
-            // Calcul du déplacement vectoriel
-            car.x += Math.cos(car.angle) * car.speed;
-            car.y += Math.sin(car.angle) * car.speed;
+            // Application des mouvements selon l'angle de la voiture
+            car.position.x += Math.sin(physics.angle) * physics.speed;
+            car.position.z += Math.cos(physics.angle) * physics.speed;
+            
+            // Rotation visuelle de la voiture
+            car.rotation.y = physics.angle;
 
-            // Limites du monde (Open World)
-            if (car.x < 0) car.x = 0;
-            if (car.x > WORLD_SIZE) car.x = WORLD_SIZE;
-            if (car.y < 0) car.y = 0;
-            if (car.y > WORLD_SIZE) car.y = WORLD_SIZE;
-
-            // Mise à jour du compteur de vitesse (arrondi)
-            speedDisplay.innerText = Math.round(Math.abs(car.speed) * 20);
+            // Affichage ATH de la vitesse
+            document.getElementById('speed-display').innerText = Math.round(Math.abs(physics.speed) * 300);
         }
 
-        function drawGame() {
-            // Effacer l'écran
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function updateCamera() {
+            // LOGIQUE DE LA CAMÉRA POURSUITE (Style Forza/GTA)
+            // On calcule une position idéale derrière et légèrement au-dessus de la voiture
+            const backX = car.position.x - Math.sin(physics.angle) * 12;
+            const backZ = car.position.z - Math.cos(physics.angle) * 12;
+            const targetY = car.position.y + 4;
 
-            // Définir la caméra centrée sur la voiture
-            let camX = car.x - canvas.width / 2;
-            let camY = car.y - canvas.height / 2;
+            // Effet d'amorti fluide (Lerp) pour que la caméra suive avec de l'inertie cinématographique
+            camera.position.x += (backX - camera.position.x) * 0.1;
+            camera.position.z += (backZ - camera.position.z) * 0.1;
+            camera.position.y += (targetY - camera.position.y) * 0.1;
 
-            ctx.save();
-            // Décaler tout le dessin selon la position de la caméra
-            ctx.translate(-camX, -camY);
-
-            // 1. Dessiner le sol quadrillé (effet néon)
-            ctx.strokeStyle = '#151525';
-            ctx.lineWidth = 1;
-            const gridSize = 100;
-            for (let x = 0; x < WORLD_SIZE; x += gridSize) {
-                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, WORLD_SIZE); ctx.stroke();
-            }
-            for (let y = 0; y < WORLD_SIZE; y += gridSize) {
-                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(WORLD_SIZE, y); ctx.stroke();
-            }
-
-            // 2. Dessiner les obstacles (immeubles)
-            obstacles.forEach(obs => {
-                ctx.fillStyle = '#090910';
-                ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-                ctx.strokeStyle = obs.color;
-                ctx.lineWidth = 3;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = obs.color;
-                ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
-                ctx.shadowBlur = 0; // reset
-            });
-
-            // 3. Dessiner la voiture
-            ctx.save();
-            ctx.translate(car.x, car.y);
-            ctx.rotate(car.angle);
-
-            // Ombre / Lueur sous la voiture
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#00f2fe';
-
-            // Corps de la voiture
-            ctx.fillStyle = '#00f2fe';
-            ctx.fillRect(-car.width/2, -car.height/2, car.width, car.height);
-
-            // Phares (petites lignes jaunes à l'avant)
-            ctx.fillStyle = '#ffff00';
-            ctx.fillRect(car.width/2 - 4, -car.height/2 + 2, 4, 3);
-            ctx.fillRect(car.width/2 - 4, car.height/2 - 5, 4, 3);
-
-            // Pare-brise sombre
-            ctx.fillStyle = '#0c0c14';
-            ctx.fillRect(-2, -car.height/2 + 3, 8, car.height - 6);
-
-            ctx.restore();
-            ctx.restore();
+            // La caméra regarde toujours vers l'avant de la voiture
+            camera.lookAt(new THREE.Vector3(car.position.x, car.position.y + 1, car.position.z));
         }
 
-        function gameLoop() {
+        function animate() {
+            gameLoopId = requestAnimationFrame(animate);
             updatePhysics();
-            drawGame();
-            gameLoopId = requestAnimationFrame(gameLoop);
+            updateCamera();
+            renderer.render(scene, camera);
+        }
+
+        function stopGame() {
+            if (gameLoopId) cancelAnimationFrame(gameLoopId);
+            switchScreen('main-menu');
         }
     </script>
 </body>
