@@ -3,22 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Horizon 3D</title>
+    <title>Neon City Horizon 3D</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
-    
-    <!-- On importe la bibliothèque 3D Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Orbitron', sans-serif;
-            background: #0a0a12;
+            background: #05050a;
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -26,126 +19,55 @@
             overflow: hidden;
             color: #fff;
         }
-
         #game-container {
             position: relative;
             width: 1000px;
             height: 700px;
-            background-color: #0c0c14;
             border: 4px solid #00f2fe;
             border-radius: 12px;
             box-shadow: 0 0 30px rgba(0, 242, 254, 0.3);
             overflow: hidden;
         }
-
         .screen {
             position: absolute;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
             transition: all 0.3s ease-in-out;
             z-index: 2;
         }
-
-        .hidden {
-            opacity: 0;
-            pointer-events: none;
-            transform: scale(0.95);
-        }
-
+        .hidden { opacity: 0; pointer-events: none; transform: scale(0.95); }
         .game-title {
-            font-size: 4rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            color: #fff;
+            font-size: 4rem; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 4px;
             text-shadow: 0 0 10px #ff007f, 0 0 20px #ff007f;
             margin-bottom: 50px;
         }
-
-        .menu-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            width: 300px;
-        }
-
+        .menu-buttons { display: flex; flex-direction: column; gap: 20px; width: 300px; }
         .btn {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.2rem;
-            font-weight: 500;
-            color: #00f2fe;
-            background: transparent;
-            padding: 15px 20px;
-            border: 2px solid #00f2fe;
-            border-radius: 6px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            font-family: 'Orbitron', sans-serif; font-size: 1.2rem;
+            color: #00f2fe; background: transparent;
+            padding: 15px 20px; border: 2px solid #00f2fe;
+            border-radius: 6px; cursor: pointer; text-transform: uppercase;
             transition: all 0.3s ease;
         }
-
-        .btn:hover {
-            color: #fff;
-            background-color: #00f2fe;
-            box-shadow: 0 0 15px #00f2fe;
-            transform: translateY(-3px);
-        }
-
-        .btn-secondary {
-            border-color: #ff007f;
-            color: #ff007f;
-        }
-
-        .btn-secondary:hover {
-            background-color: #ff007f;
-            box-shadow: 0 0 15px #ff007f;
-        }
-
-        /* Interface du jeu 3D */
-        #game-screen {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-        }
-
-        #canvas3d {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
+        .btn:hover { color: #fff; background-color: #00f2fe; box-shadow: 0 0 15px #00f2fe; transform: translateY(-3px); }
+        .btn-secondary { border-color: #ff007f; color: #ff007f; }
+        .btn-secondary:hover { background-color: #ff007f; box-shadow: 0 0 15px #ff007f; }
+        #game-screen { position: absolute; width: 100%; height: 100%; }
+        #canvas3d { width: 100%; height: 100%; display: block; }
         .hud {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 1.5rem;
-            color: #00f2fe;
-            text-shadow: 0 0 5px #00f2fe;
-            pointer-events: none;
-            background: rgba(12, 12, 20, 0.7);
-            padding: 15px;
-            border-radius: 8px;
-            border: 2px solid #00f2fe;
-            z-index: 3;
+            position: absolute; top: 20px; left: 20px;
+            font-size: 1.5rem; color: #00f2fe; text-shadow: 0 0 5px #00f2fe;
+            background: rgba(12, 12, 20, 0.8); padding: 15px;
+            border-radius: 8px; border: 2px solid #00f2fe; z-index: 3;
         }
-
-        .back-hud {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 3;
-        }
+        .back-hud { position: absolute; top: 20px; right: 20px; z-index: 3; }
     </style>
 </head>
 <body>
 
     <div id="game-container">
-
-        <!-- MENU PRINCIPAL -->
         <div id="main-menu" class="screen">
             <h1 class="game-title">Neon Horizon</h1>
             <div class="menu-buttons">
@@ -154,17 +76,14 @@
             </div>
         </div>
 
-        <!-- ZONE DE JEU 3D -->
         <div id="game-screen" class="screen hidden">
             <div class="hud">Vitesse: <span id="speed-display">0</span> km/h</div>
             <div class="back-hud">
                 <button class="btn btn-secondary" style="padding: 8px 15px; font-size: 0.9rem;" onclick="stopGame()">Menu</button>
             </div>
-            <!-- C'est ici que Three.js va injecter le monde en 3D -->
             <div id="canvas3d"></div>
         </div>
 
-        <!-- COMMANDES -->
         <div id="controls-screen" class="screen hidden">
             <h1 class="game-title">Commandes</h1>
             <p style="text-align: center; line-height: 2; color: #a0a0ca; margin-bottom: 30px; font-size: 1.1rem;">
@@ -175,24 +94,18 @@
                 <button class="btn btn-secondary" onclick="switchScreen('main-menu')">Retour</button>
             </div>
         </div>
-
     </div>
 
     <script>
         let scene, camera, renderer, gameLoopId;
-        let car, carBody;
+        let car;
         let obstacles = [];
         
-        // Physique de la voiture
         let physics = {
-            speed: 0,
-            maxSpeed: 0.8,
-            backSpeed: -0.2,
-            accel: 0.01,
-            decel: 0.005,
-            friction: 0.003,
-            turnSpeed: 0.03,
-            angle: 0
+            speed: 0, maxSpeed: 1.2, backSpeed: -0.3,
+            accel: 0.015, decel: 0.01, friction: 0.005,
+            turnSpeed: 0.035, angle: 0,
+            width: 2.2, length: 4.2 // Dimensions de la hitbox de la voiture
         };
 
         let keys = {};
@@ -202,104 +115,154 @@
         function switchScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
             document.getElementById(screenId).classList.remove('hidden');
-            
-            if (screenId === 'game-screen') {
-                init3DGame();
-            }
+            if (screenId === 'game-screen') init3DGame();
         }
 
         function init3DGame() {
             const container = document.getElementById('canvas3d');
-            container.innerHTML = ""; // On nettoie si besoin
+            container.innerHTML = "";
 
-            // 1. CRÉATION DE LA SCÈNE ET DE LA CAMÉRA
             scene = new THREE.Scene();
-            scene.background = new THREE.Color('#05050a');
-            scene.fog = new THREE.FogExp2('#05050a', 0.015); // Effet de brume au loin
+            scene.background = new THREE.Color('#030308');
+            scene.fog = new THREE.FogExp2('#030308', 0.01);
 
             camera = new THREE.PerspectiveCamera(60, 1000 / 700, 0.1, 1000);
 
-            // 2. LE MOTEUR DE RENDU
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(1000, 700);
             container.appendChild(renderer.domElement);
 
-            // 3. LES LUMIÈRES
-            const ambientLight = new THREE.AmbientLight('#ffffff', 0.4);
-            scene.add(ambientLight);
-
-            const dirLight = new THREE.DirectionalLight('#00f2fe', 0.8);
-            dirLight.position.set(10, 20, 10);
+            // LUMIÈRES
+            scene.add(new THREE.AmbientLight('#ffffff', 0.3));
+            let dirLight = new THREE.DirectionalLight('#ff007f', 0.8);
+            dirLight.position.set(20, 40, 20);
             scene.add(dirLight);
 
-            // 4. LE DECOR : Un sol immense avec grille néon
-            const groundGeo = new THREE.PlaneGeometry(2000, 2000);
-            const groundMat = new THREE.MeshBasicMaterial({ color: '#080812' }); // Corrigé ici avec des guillemets !
-            const ground = new THREE.Mesh(groundGeo, groundMat);
-            ground.rotation.x = -Math.PI / 2; // On le couche à plat
+            // 1. LE SOL GLOBAL (Herbe/Fond sombre)
+            let groundGeo = new THREE.PlaneGeometry(3000, 3000);
+            let groundMat = new THREE.MeshPhongMaterial({ color: '#05050d' });
+            let ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
             scene.add(ground);
 
-            const gridHelper = new THREE.GridHelper(2000, 100, '#00f2fe', '#151525');
-            gridHelper.position.y = 0.01;
-            scene.add(gridHelper);
+            // 2. LA ROUTE EN ASPHALTE (Une immense ligne droite centrale de 40m de large)
+            let roadGeo = new THREE.PlaneGeometry(40, 3000);
+            let roadMat = new THREE.MeshPhongMaterial({ color: '#101018', roughness: 0.8 });
+            let road = new THREE.Mesh(roadGeo, roadMat);
+            road.rotation.x = -Math.PI / 2;
+            road.position.y = 0.01; // Juste au-dessus du sol pour éviter les bugs d'affichage
+            scene.add(road);
 
-            // 5. LA VOITURE (Assemblage de blocs 3D)
+            // Lignes de délimitation de la route (blanches sur les côtés)
+            for (let side of [-19.5, 19.5]) {
+                let lineGeo = new THREE.PlaneGeometry(0.4, 3000);
+                let lineMat = new THREE.MeshBasicMaterial({ color: '#ffffff' });
+                let line = new THREE.Mesh(lineGeo, lineMat);
+                line.rotation.x = -Math.PI / 2;
+                line.position.set(side, 0.02, 0);
+                scene.add(line);
+            }
+
+            // Lignes pointillées au milieu (Jaunes)
+            for (let z = -1500; z < 1500; z += 30) {
+                let dashGeo = new THREE.PlaneGeometry(0.3, 12);
+                let dashMat = new THREE.MeshBasicMaterial({ color: '#ffcc00' });
+                let dash = new THREE.Mesh(dashGeo, dashMat);
+                dash.rotation.x = -Math.PI / 2;
+                dash.position.set(0, 0.02, z);
+                scene.add(dash);
+            }
+
+            // 3. LA VOITURE AVEC SES ROUES
             car = new THREE.Group();
             
-            // Châssis principal
-            const bodyGeo = new THREE.BoxGeometry(2, 0.6, 4);
-            const bodyMat = new THREE.MeshPhongMaterial({ color: '#00f2fe', emissive: '#004455' });
-            carBody = new THREE.Mesh(bodyGeo, bodyMat);
-            carBody.position.y = 0.4;
+            // Carrosserie
+            let bodyGeo = new THREE.BoxGeometry(2, 0.6, 4);
+            let bodyMat = new THREE.MeshPhongMaterial({ color: '#00f2fe', specular: '#ffffff' });
+            let carBody = new THREE.Mesh(bodyGeo, bodyMat);
+            carBody.position.y = 0.5;
             car.add(carBody);
 
-            // Habitacle (Cockpit)
-            const cabinGeo = new THREE.BoxGeometry(1.6, 0.5, 1.8);
-            const cabinMat = new THREE.MeshPhongMaterial({ color: '#0c0c14' });
-            const cabin = new THREE.Mesh(cabinGeo, cabinMat);
-            cabin.position.set(0, 0.8, -0.2);
+            let cabinGeo = new THREE.BoxGeometry(1.6, 0.5, 1.8);
+            let cabinMat = new THREE.MeshPhongMaterial({ color: '#090910' });
+            let cabin = new THREE.Mesh(cabinGeo, cabinMat);
+            cabin.position.set(0, 0.9, -0.2);
             car.add(cabin);
 
-            // Phares néons avant
-            const lightGeo = new THREE.BoxGeometry(0.3, 0.1, 0.1);
-            const lightMat = new THREE.MeshBasicMaterial({ color: '#ffff00' });
-            const leftLight = new THREE.Mesh(lightGeo, lightMat);
-            leftLight.position.set(-0.7, 0.4, 2);
-            const rightLight = leftLight.clone();
-            rightLight.position.x = 0.7;
-            car.add(leftLight, rightLight);
+            // Ajout des 4 roues (Cylindres noirs)
+            let wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.4, 16);
+            let wheelMat = new THREE.MeshPhongMaterial({ color: '#0a0a0f' });
+            wheelGeo.rotateZ(Math.PI / 2); // Coucher le cylindre pour en faire une roue
+
+            let wheelPositions = [
+                [-1.1, 0.4, 1.2],  // Avant Gauche
+                [1.1, 0.4, 1.2],   // Avant Droite
+                [-1.1, 0.4, -1.2], // Arrière Gauche
+                [1.1, 0.4, -1.2]   // Arrière Droite
+            ];
+
+            wheelPositions.forEach(pos => {
+                let wheel = new THREE.Mesh(wheelGeo, wheelMat);
+                wheel.position.set(pos[0], pos[1], pos[2]);
+                car.add(wheel);
+            });
 
             scene.add(car);
             car.position.set(0, 0, 0);
 
-            // 6. LES CARTES / DÉCORS (Génération de buildings 3D autour)
+            // 4. CRÉATION DES IMMEUBLES ALIGNÉS SUR LES BORDURES
             obstacles = [];
-            for(let i=0; i<100; i++) {
-                const h = Math.random() * 30 + 10;
-                const w = Math.random() * 10 + 5;
-                const obsGeo = new THREE.BoxGeometry(w, h, w);
-                const obsMat = new THREE.MeshPhongMaterial({ 
-                    color: '#090910', 
-                    emissive: Math.random() > 0.5 ? '#ff007f' : '#00f2fe',
-                    wireframe: false
-                });
-                const building = new THREE.Mesh(obsGeo, obsMat);
+            for (let i = 0; i < 80; i++) {
+                let h = Math.random() * 40 + 15;
+                let w = Math.random() * 12 + 8;
                 
-                // Placement aléatoire sur la map (en évitant le centre de départ)
-                let rx = (Math.random() - 0.5) * 600;
-                let rz = (Math.random() - 0.5) * 600;
-                if (Math.abs(rx) < 20) rx += 40;
-                if (Math.abs(rz) < 20) rz += 40;
+                let obsGeo = new THREE.BoxGeometry(w, h, w);
+                let neonColor = Math.random() > 0.5 ? '#ff007f' : '#00f2fe';
+                let obsMat = new THREE.MeshPhongMaterial({ color: '#08080f', emissive: neonColor, emissiveIntensity: 0.15 });
+                let building = new THREE.Mesh(obsGeo, obsMat);
+                
+                // Positionnement : soit à gauche de la route (<-25), soit à droite (>25)
+                let side = Math.random() > 0.5 ? 1 : -1;
+                let rx = side * (Math.random() * 50 + 26); 
+                let rz = (Math.random() - 0.5) * 1800; // Répartis sur toute la longueur
 
                 building.position.set(rx, h/2, rz);
                 scene.add(building);
+
+                // On stocke les données de l'immeuble pour gérer les collisions
+                obstacles.push({
+                    x: rx,
+                    z: rz,
+                    halfW: w / 2,
+                    halfD: w / 2
+                });
             }
 
             animate();
         }
 
+        function checkCollisions() {
+            // Rayon/Taille de sécurité autour du centre de la voiture
+            let carHalfW = physics.width / 2;
+            let carHalfL = physics.length / 2;
+
+            obstacles.forEach(obs => {
+                // Algorithme AABB (Vérification si les boîtes se touchent)
+                if (Math.abs(car.position.x - obs.x) < (carHalfW + obs.halfW) &&
+                    Math.abs(car.position.z - obs.z) < (carHalfL + obs.halfD)) {
+                    
+                    // COLLISION DÉTECTÉE !
+                    // 1. On inverse et réduit la vitesse (effet de choc/rebond)
+                    physics.speed = -physics.speed * 0.4;
+
+                    // 2. On repousse légèrement la voiture en arrière pour éviter qu'elle reste coincée dans le mur
+                    car.position.x -= Math.sin(physics.angle) * 0.6;
+                    car.position.z -= Math.cos(physics.angle) * 0.6;
+                }
+            });
+        }
+
         function updatePhysics() {
-            // Accélération / Freinage
             if (keys['ArrowUp']) {
                 if (physics.speed < physics.maxSpeed) physics.speed += physics.accel;
             } else if (keys['ArrowDown']) {
@@ -310,36 +273,34 @@
                 if (Math.abs(physics.speed) < 0.005) physics.speed = 0;
             }
 
-            // Direction (Braquage réaliste proportionnel à la vitesse)
             if (Math.abs(physics.speed) > 0.02) {
                 const currentTurn = physics.speed > 0 ? physics.turnSpeed : -physics.turnSpeed;
                 if (keys['ArrowLeft']) physics.angle += currentTurn;
                 if (keys['ArrowRight']) physics.angle -= currentTurn;
             }
 
-            // Application des mouvements selon l'angle de la voiture
+            // Déplacement
             car.position.x += Math.sin(physics.angle) * physics.speed;
             car.position.z += Math.cos(physics.angle) * physics.speed;
-            
-            // Rotation visuelle de la voiture
             car.rotation.y = physics.angle;
 
-            // Affichage ATH de la vitesse
-            document.getElementById('speed-display').innerText = Math.round(Math.abs(physics.speed) * 300);
+            // Lancement de la vérification des murs
+            checkCollisions();
+
+            // Vitesse affichée à l'écran
+            document.getElementById('speed-display').innerText = Math.round(Math.abs(physics.speed) * 220);
         }
 
         function updateCamera() {
-            // LOGIQUE DE LA CAMÉRA POURSUITE (Style Forza/GTA)
             const backX = car.position.x - Math.sin(physics.angle) * 12;
             const backZ = car.position.z - Math.cos(physics.angle) * 12;
-            const targetY = car.position.y + 4;
+            const targetY = car.position.y + 3.5;
 
-            // Effet d'amorti fluide (Lerp)
-            camera.position.x += (backX - camera.position.x) * 0.1;
-            camera.position.z += (backZ - camera.position.z) * 0.1;
-            camera.position.y += (targetY - camera.position.y) * 0.1;
+            camera.position.x += (backX - camera.position.x) * 0.08;
+            camera.position.z += (backZ - camera.position.z) * 0.08;
+            camera.position.y += (targetY - camera.position.y) * 0.08;
 
-            camera.lookAt(new THREE.Vector3(car.position.x, car.position.y + 1, car.position.z));
+            camera.lookAt(new THREE.Vector3(car.position.x, car.position.y + 0.8, car.position.z));
         }
 
         function animate() {
