@@ -234,7 +234,7 @@
 
             // 4. LE DECOR : Un sol immense avec grille néon
             const groundGeo = new THREE.PlaneGeometry(2000, 2000);
-            const groundMat = new THREE.MeshBasicMaterial({ color: #080812 });
+            const groundMat = new THREE.MeshBasicMaterial({ color: '#080812' }); // Corrigé ici avec des guillemets !
             const ground = new THREE.Mesh(groundGeo, groundMat);
             ground.rotation.x = -Math.PI / 2; // On le couche à plat
             scene.add(ground);
@@ -330,17 +330,15 @@
 
         function updateCamera() {
             // LOGIQUE DE LA CAMÉRA POURSUITE (Style Forza/GTA)
-            // On calcule une position idéale derrière et légèrement au-dessus de la voiture
             const backX = car.position.x - Math.sin(physics.angle) * 12;
             const backZ = car.position.z - Math.cos(physics.angle) * 12;
             const targetY = car.position.y + 4;
 
-            // Effet d'amorti fluide (Lerp) pour que la caméra suive avec de l'inertie cinématographique
+            // Effet d'amorti fluide (Lerp)
             camera.position.x += (backX - camera.position.x) * 0.1;
             camera.position.z += (backZ - camera.position.z) * 0.1;
             camera.position.y += (targetY - camera.position.y) * 0.1;
 
-            // La caméra regarde toujours vers l'avant de la voiture
             camera.lookAt(new THREE.Vector3(car.position.x, car.position.y + 1, car.position.z));
         }
 
